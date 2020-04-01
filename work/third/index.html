@@ -33,8 +33,8 @@
       // .removeClass() クラスを削除します。
 
       $(".nav").find("li").on('click', function() {
-        var index = $(this).index();
-        $(".contents").find("li").addClass("is-hidden").eq(index).removeClass("is-hidden")
+        var navIndex = $(this).index();
+        $(".contents").find("li").addClass("is-hidden").eq(navIndex).removeClass("is-hidden")
       })
     });
     </script>
