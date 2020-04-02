@@ -103,17 +103,19 @@
            var cateVal = $(this).val();
            if(cateVal === 'all') {
              $(".list").find("li").show();
-           } else {
-             $(".list").find("li").each(function(index, element) {
-               if($(element).data('category-type') === cateVal) {
+          } else {
+            // 第一引数に各要素のインデックス番号、第二引数には繰り返し処理中の要素の値
+            // 今回は第二引数のみにしか役割がないが第二引数のみを書く方法はないため第一引数を書く必要がある。
+            $(".list").find("li").each(function( object, element ) {
+              if($(element).data('category-type') === cateVal) {
                 $(element).show();
-               } else {
+              } else {
                 $(element).hide();
-               }
-             });
-           }
-         });
+              }
+            });
+          }
         });
+      });
     </script>
   </body>
 </html>
