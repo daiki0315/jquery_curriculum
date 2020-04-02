@@ -104,13 +104,11 @@
            if(cateVal === 'all') {
              $(".list").find("li").show();
            } else {
-             $(".list").find("li").each(function(sort) {
-               var thisli = $(this);
-               sort = thisli
-               if(sort.data('category-type') === cateVal) {
-                sort.show();
+             $(".list").find("li").each(function(index, element) {
+               if($(element).data('category-type') === cateVal) {
+                $(element).show();
                } else {
-                sort.hide();
+                $(element).hide();
                }
              });
            }
