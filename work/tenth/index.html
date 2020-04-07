@@ -7,8 +7,12 @@
     <title>jQuery</title>
     <link rel="stylesheet" href="../../common/css/reset.css">
     <link rel="stylesheet" href="../../common/css/base.css">
-    <link rel="stylesheet" href="./css/style.css">
+    <!-- akaxにはキャッシュというブラウザがウェブの情報を一時保管し、
+      次に同じページにアクセスしたとき20200406のような数列を入れることで違う値が毎回保存される -->
+    <link rel="stylesheet" href="./css/style.css?20200406">
   </head>
+
+
   <body>
     <div class="wrap">
       <div class="container">
@@ -22,8 +26,11 @@
           <button id="js-search-button" class="search__btn">検索する</button>
         </div>
         <ul class="lists"></ul>
+        </div>
       </div>
     </div>
+
+
     <script src="../../common/js/jquery.js"></script>
     <script>
       // 楽天ブックスの総合検索APIを使って製作してください。
@@ -68,6 +75,159 @@
       //
       //
       //
+      $(function() {
+        var parameter = {
+          applicationId: '1013041242368735405',
+          keyword: '',
+          hits: 20,
+          page: 1,
+          booksGenreId: '001',
+        };
+
+
+        // 検索をしたとき関数initと関数requestを実行する。
+        var isLastPage = false;
+        $('.search__btn').on('click', function() {
+          init();
+          request();
+        });
+
+        // 前への動作
+        // ページ数が一ページの時、開いてるページが最後のページの時は実行できない。
+        // parameter.page -- ;の--はデクリメント演算子といい、変数を1だけ減らす。
+        // parameter.pageを1減らすことで前のページに戻り、関数requestを実行する。
+        $(document).on('click', '.prev', function() {
+          if(parameter.page === 1) return false;
+          isLastPage = false;
+          parameter.page -- ;
+          request();
+        });
+
+        // 次への動作
+        // 開いてるページが最後のページの時は関数noMorePageMessage実行する。
+        // parameter.page ++ ;の++はインクリメント演算子といい、変数を1だけ増やす。
+        // parameter.pageを1増やすことで次のページにいき、関数requestを実行する。
+        $(document).on('click', '.next', function() {
+          if(isLastPage) return noMorePageMessage();
+          parameter.page ++ ;
+          request();
+        });
+        
+        // 検索結果を表示する動作
+        // inputに入った値を取得し、値と一致するものが0だった場合は関数notFoundMessage表示される。
+        // それ以外の場合関数showResultからdata.Itemsを取得、showPagerからdataを取得する。
+        // 開いてるページとページ数が一致している場合は変数isLastPageの条件判定がtrueとなり、
+        // 処理が実行される。
+        // 失敗時は関数responseErrorMessageが実行される。
+        function request() {
+          parameter.keyword = $('#js-search-word').val();
+          $.ajax ({
+            url:'https://app.rakuten.co.jp/services/api/BooksTotal/Search/20130522',
+            type: 'GET',
+            datatype: 'json',
+            data: parameter,
+          }).done(function(data) {
+            if(data.count === 0) {
+              notFoundMessage();
+            }else {
+              showResult(data.Items);
+              showPager(data);
+            }if (parameter.page === data.pageCount) isLastPage = true;
+          }).fail(function(e) {
+            responseErrorMessage(e);
+          });
+        }
+
+        // 検索の際に一度リセットを入れるための関数
+        // ページを一番最初に飛ばし、変数isLastPageの条件判定をfalseにする。
+        // .messageと.listsの前に表示されていたものを削除する。
+        function init() {
+          parameter.page = 1;
+          isLastPage = false;
+          $('.message').remove();
+          $('.lists').empty();
+        };
+
+        // 検索結果が見つからないときに使われる関数
+        // 前に出ていたメッセージを消さないとメッセージが増え続けるため
+        // 一度消してから.listsの上にメッセージを表示する。
+        function notFoundMessage() {
+          $('.message').remove();
+          $('.lists').before('<div class="message">検索結果が見つかりませんでした。<br>別のキーワードで検索して下さい。</div>');
+        }
+
+        // ページ数がこれ以上ないときに使われる関数
+        // 前に出ていたメッセージを消さないとメッセージが増え続けるため
+        // 一度消してから.listsの上にメッセージを表示する。
+        function noMorePageMessage() {
+          $('.message').remove();
+          $('.lists').before('<div class="message">これ以上はありません</div>');
+        }
+
+        // 通信失敗時、検索ワードの文字数が足りないとき、検索するを連打したときに使われる関数
+        // 通信に失敗した場合はundefinedのため入る値が0となるためe.status === 0のテキストが表示される。
+        // 検索ワードの文字数が足りないときはHTTPステータスコードの400という値が返ってくるため
+        // e.status === 400に分岐する。
+        function responseErrorMessage(e) {
+          $('.message').remove();
+          if (e.status === 0) {
+            $('.lists').before('<div class="message">通信に失敗しました。インターネットの接続をご確認ください。</div>');
+          } else if (e.status === 400) {
+            $('.lists').before('<div class="message">検索文字が空、もしくは半角英数1文字になっています。</div>');
+          } else {
+            $('.lists').before('<div class="message">予期せぬエラーが発生しました.</div>');
+          }
+        }
+
+        // 検索結果を格納する関数
+        // 正常に動作しているので最初にメッセージは削除する。
+        // その後、変数templateにlists__itemを格納し、
+        // htmlに表示する。
+        function showResult(result) {
+          $('.message').remove();
+          let template= '';
+          $.each(result, function(index, item) {
+            template +=  `<li class='lists__item'>
+                          <div class='lists__item__inner'>
+                            <a href='${item.Item.itemUrl}' class='lists__item__link' target='_blank'>
+                              <img src='${item.Item.largeImageUrl}' class='lists__item__img' alt='${item.Item.title}'>
+                              <p class='lists__item__detail'>作品名：${item.Item.title}</p>
+                              <p class='lists__item__detail'>作者　：${item.Item.author}</p>
+                              <p class='lists__item__detail'>出版社：${item.Item.publisherName}</p>
+                            </a>
+                          </div>
+                         </li>`;
+          });
+          $('.lists').html(template);
+        }
+        
+        // ページャーの関数
+        // ページャー上部にあるボーダーラインを削除し、
+        // .prev, .next
+        // .listsの後に変数pagerを挿入する。
+        // resultのページ数が1の場合、.prevにclass disabledを追加する。
+        // resultのページ数と現在開いてるページが一致している場合、.nextにclass disabledを追加する。
+        function showPager(result) {
+          $('.js-pager').remove();
+          $('.prev, .next').removeClass('disabled');
+          let pager = `<div class="js-pager">
+                        <ul class="btn-wrapper">
+                          <li class="prev btn-item">
+                            <a class="btn-anchor" href="#">前へ</a>
+                          </li>
+                          <li class="next btn-item">
+                            <a class="btn-anchor" href="#">次へ</a>
+                          </li>
+                        </ul>
+                      </div>`;
+          $('.lists').after(pager);
+          if(result.page === 1) {
+            $('.prev').addClass('disabled');
+          }if(result.page === result.pageCount) {
+            $('.next').addClass('disabled');
+          }
+        }
+      });
     </script>
   </body>
 </html>
