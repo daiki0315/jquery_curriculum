@@ -87,7 +87,7 @@
 
         // 検索をしたとき関数initと関数requestを実行する。
         var isLastPage = false;
-        $('.search__btn').on('click', function() {
+        $(".search__btn").on('click', function() {
           init();
           request();
         });
@@ -96,7 +96,7 @@
         // ページ数が一ページの時、開いてるページが最後のページの時は実行できない。
         // parameter.page -- ;の--はデクリメント演算子といい、変数を1だけ減らす。
         // parameter.pageを1減らすことで前のページに戻り、関数requestを実行する。
-        $(document).on('click', '.prev', function() {
+        $(document).on('click', ".prev", function() {
           if(parameter.page === 1) return false;
           isLastPage = false;
           parameter.page -- ;
@@ -107,7 +107,7 @@
         // 開いてるページが最後のページの時は関数noMorePageMessage実行する。
         // parameter.page ++ ;の++はインクリメント演算子といい、変数を1だけ増やす。
         // parameter.pageを1増やすことで次のページにいき、関数requestを実行する。
-        $(document).on('click', '.next', function() {
+        $(document).on('click', ".next", function() {
           if(isLastPage) return noMorePageMessage();
           parameter.page ++ ;
           request();
@@ -120,7 +120,7 @@
         // 処理が実行される。
         // 失敗時は関数responseErrorMessageが実行される。
         function request() {
-          parameter.keyword = $('#js-search-word').val();
+          parameter.keyword = $("#js-search-word").val();
           $.ajax ({
             url:'https://app.rakuten.co.jp/services/api/BooksTotal/Search/20130522',
             type: 'GET',
@@ -144,38 +144,42 @@
         function init() {
           parameter.page = 1;
           isLastPage = false;
-          $('.message').remove();
-          $('.lists').empty();
+          $(".message").remove();
+          $(".lists").empty();
         };
 
         // 検索結果が見つからないときに使われる関数
         // 前に出ていたメッセージを消さないとメッセージが増え続けるため
         // 一度消してから.listsの上にメッセージを表示する。
         function notFoundMessage() {
-          $('.message').remove();
-          $('.lists').before('<div class="message">検索結果が見つかりませんでした。<br>別のキーワードで検索して下さい。</div>');
+          $(".message").remove();
+          $(".lists").before('<div class="message">検索結果が見つかりませんでした。<br>別のキーワードで検索して下さい。</div>');
         }
 
         // ページ数がこれ以上ないときに使われる関数
         // 前に出ていたメッセージを消さないとメッセージが増え続けるため
         // 一度消してから.listsの上にメッセージを表示する。
         function noMorePageMessage() {
-          $('.message').remove();
-          $('.lists').before('<div class="message">これ以上はありません</div>');
+          $(".message").remove();
+          $(".lists").before('<div class="message">これ以上はありません</div>');
         }
 
         // 通信失敗時、検索ワードの文字数が足りないとき、検索するを連打したときに使われる関数
-        // 通信に失敗した場合はundefinedのため入る値が0となるためe.status === 0のテキストが表示される。
+        // 通信に失敗した場合は入る値がないため0となるため、e.status === 0のテキストが表示される。
         // 検索ワードの文字数が足りないときはHTTPステータスコードの400という値が返ってくるため
         // e.status === 400に分岐する。
+        // リクエスト過多のときはHTTPステータスコードの429という値が返ってくるため
+        // e.status === 429に分岐する。
         function responseErrorMessage(e) {
-          $('.message').remove();
+          $(".message").remove();
           if (e.status === 0) {
-            $('.lists').before('<div class="message">通信に失敗しました。インターネットの接続をご確認ください。</div>');
-          } else if (e.status === 400) {
-            $('.lists').before('<div class="message">検索文字が空、もしくは半角英数1文字になっています。</div>');
-          } else {
-            $('.lists').before('<div class="message">予期せぬエラーが発生しました.</div>');
+            $(".lists").before('<div class="message">通信に失敗しました。インターネットの接続をご確認ください。</div>');
+          }else if (e.status === 400) {
+            $(".lists").before('<div class="message">検索文字が空、もしくは半角英数1文字になっています。</div>');
+          }else if (e.status === 429) {
+            $(".lists").before('<div class="message">リクエスト過多です。<br>しばらく時間を空けてから、ご利用ください。</div>');
+          }else {
+            $(".lists").before('<div class="message">予期せぬエラーが発生しました.</div>');
           }
         }
 
@@ -184,19 +188,19 @@
         // その後、変数templateにlists__itemを格納し、
         // htmlに表示する。
         function showResult(result) {
-          $('.message').remove();
-          let template= '';
+          $(".message").remove();
+          var template= '';
           $.each(result, function(index, item) {
-            template +=  `<li class='lists__item'>
-                          <div class='lists__item__inner'>
-                            <a href='${item.Item.itemUrl}' class='lists__item__link' target='_blank'>
-                              <img src='${item.Item.largeImageUrl}' class='lists__item__img' alt='${item.Item.title}'>
-                              <p class='lists__item__detail'>作品名：${item.Item.title}</p>
-                              <p class='lists__item__detail'>作者　：${item.Item.author}</p>
-                              <p class='lists__item__detail'>出版社：${item.Item.publisherName}</p>
-                            </a>
-                          </div>
-                         </li>`;
+          template +=  '<li class="lists__item">' +
+                          '<div class="lists__item__inner">' +
+                            '<a href=" ' + item.Item.itemUrl + ' " class="lists__item__link" target="_blank">' +
+                              '<img src=" ' + item.Item.largeImageUrl + ' " class="lists__item__img" alt=" ' + item.Item.title + ' ">' +
+                              '<p class="lists__item__detail">作品名：' + item.Item.title + '</p>' +
+                              '<p class="lists__item__detail">作者　：' + item.Item.author + '</p>' +
+                              '<p class="lists__item__detail">出版社：' + item.Item.publisherName + '</p>' +
+                            '</a>' +
+                          '</div>' +
+                         '</li>';
           });
           $('.lists').html(template);
         }
@@ -210,16 +214,16 @@
         function showPager(result) {
           $('.js-pager').remove();
           $('.prev, .next').removeClass('disabled');
-          let pager = `<div class="js-pager">
-                        <ul class="btn-wrapper">
-                          <li class="prev btn-item">
-                            <a class="btn-anchor" href="#">前へ</a>
-                          </li>
-                          <li class="next btn-item">
-                            <a class="btn-anchor" href="#">次へ</a>
-                          </li>
-                        </ul>
-                      </div>`;
+          var pager = '<div class="js-pager">' +
+                        '<ul class="btn-wrapper">' +
+                          '<li class="prev btn-item">' +
+                            '<a class="btn-anchor" href="#">前へ</a>' +
+                          '</li>' +
+                          '<li class="next btn-item">' +
+                            '<a class="btn-anchor" href="#">次へ</a>' +
+                          '</li>' +
+                        '</ul>' +
+                      '</div>';
           $('.lists').after(pager);
           if(result.page === 1) {
             $('.prev').addClass('disabled');
